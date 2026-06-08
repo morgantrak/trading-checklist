@@ -604,18 +604,37 @@ function update(){
 
 /* ── SAVE TRADE ── */
 function buildEntry(quality){
-  var d=new Date();
+  var d = new Date();
+
   return {
-    ts: d.getTime(),
-    dateKey: d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),
-    time: pad(d.getHours())+':'+pad(d.getMinutes()),
-    session: session==='london'?'Лондон':'NY',
-    inst: instName||'—',
-    rr: rrVal>0?rrVal.toFixed(1):'—',
+    id: crypto.randomUUID(),
+
+    timestamp: d.getTime(),
+
+    date:
+      d.getFullYear() + "-" +
+      pad(d.getMonth()+1) + "-" +
+      pad(d.getDate()),
+
+    time:
+      pad(d.getHours()) + ":" +
+      pad(d.getMinutes()),
+
+    session: session === 'london'
+      ? 'Лондон'
+      : 'NY',
+
+    instrument: instName || '—',
+
+    rr: Number(rrVal),
+
     score: countChecked(),
-    checks: checks.slice(),
-    quality: quality  /* 'go' | 'warn' | 'nogo' */
+
+    quality: quality,
+
+    checks: checks.slice()
   };
+}
 }
 function enterTrade(){
   save(buildEntry('go'));
@@ -624,7 +643,6 @@ function enterTradeWarn(){
   save(buildEntry(countChecked()>=7?'warn':'nogo'));
 }
 async function save(entry){
-  entry.id = crypto.randomUUID();
   await saveToGoogle(entry);
   await loadHistoryFromGoogle();
   resetAll();
