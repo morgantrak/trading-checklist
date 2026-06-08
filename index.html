@@ -446,7 +446,6 @@ async function loadHistoryFromGoogle(){
 async function saveToGoogle(entry){
  return fetch(API_URL,{
    method:'POST',
-   headers:{'Content-Type':'application/json'},
    body:JSON.stringify(entry)
  });
 }
@@ -454,7 +453,6 @@ async function saveToGoogle(entry){
 async function deleteFromGoogle(id){
  return fetch(API_URL,{
    method:'POST',
-   headers:{'Content-Type':'application/json'},
    body:JSON.stringify({action:'delete',id:id})
  });
 }
@@ -598,13 +596,13 @@ async function save(entry){
 
 /* ── RESET ── */
 function resetAll(){
-  checks=new Array(10).fill(false); session=''; instType=''; instName=''; rrVal=0;
+  checks=new Array(10).fill(false); session=''; instType=''; instName=''; rrVal=1.5;
   for(var i=0;i<10;i++) document.getElementById('c'+i).classList.remove('checked');
   document.getElementById('s-london').classList.remove('active');
   document.getElementById('s-ny').classList.remove('active');
   document.querySelectorAll('.inst-btn').forEach(function(b){b.classList.remove('active')});
   document.getElementById('dxy-warn').style.display='none';
-  document.getElementById('rr-input').value='';
+  document.getElementById('rr-display').textContent='1.5';
   document.getElementById('rr-badge').textContent='— R';
   document.getElementById('rr-badge').className='rr-badge neutral';
   document.getElementById('btn-enter-row').style.display='none';
