@@ -476,17 +476,6 @@ async function loadHistoryFromGoogle(){
  }
 }
 
-   }));
-
-   renderHistory();
-   renderCalendar();
-   updateStats();
-
- }catch(e){
-   console.error(e);
- }
-}
-
 async function saveToGoogle(entry){
  return fetch(API_URL,{
    method:'POST',
@@ -669,7 +658,7 @@ function updateStats(){
 function renderHistory(){
   var list=document.getElementById('history-list');
   if(tradeHistory.length===0){list.innerHTML='<div class="history-empty">Пока нет записей</div>';return;}
-  list.innerHTML=tradeHistory.slice(0,20).map(function(e){
+  list.innerHTML=tradeHistory.slice().reverse().map(function(e){
     var cls=e.quality;
     return '<div class="history-item" onclick="deleteTrade(\''+e.id+'\')">'+
       '<div class="h-dot '+cls+'"></div>'+
