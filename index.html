@@ -442,23 +442,39 @@ async function loadHistoryFromGoogle(){
 
    tradeHistory = await r.json();
 
-   tradeHistory = tradeHistory.map(e => ({
+   tradeHistory = tradeHistory.map(e => {
 
-     ...e,
+     let dateKey = e.dateKey || e.date || "";
+     let time = e.time || "";
 
-     dateKey: e.dateKey || e.date || '',
+     if (String(dateKey).includes("T")) {
+       dateKey = String(dateKey).slice(0,10);
+     }
 
-     inst: e.inst || e.instrument || '—',
+     if (String(time).includes("T")) {
+       const d = new Date(time);
+       time =
+         String(d.getUTCHours()).padStart(2,"0") +
+         ":" +
+         String(d.getUTCMinutes()).padStart(2,"0");
+     }
 
-     checks: Array.isArray(e.checks)
-       ? e.checks
-       : (() => {
-           try {
-             return JSON.parse(e.checks || '[]');
-           } catch {
-             return [];
-           }
-         })()
+     return {
+       ...e,
+       dateKey,
+       time,
+       inst: e.inst || e.instrument || "—"
+     };
+   });
+
+   renderHistory();
+   renderCalendar();
+   updateStats();
+
+ }catch(e){
+   console.error(e);
+ }
+}
 
    }));
 
