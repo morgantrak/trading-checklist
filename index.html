@@ -450,7 +450,8 @@ async function loadHistoryFromGoogle(){
      let time = e.time || "";
 
      if (String(dateKey).includes("T")) {
-       dateKey = String(dateKey).slice(0,10);
+       const d = new Date(dateKey);
+       dateKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
      }
 
      if (String(time).includes("T")) {
@@ -664,7 +665,7 @@ function renderHistory(){
     var cls=e.quality;
     return '<div class="history-item" onclick="openTradeDetails(\''+e.id+'\')">'+
       '<div class="h-dot '+cls+'"></div>'+
-      '<span class="h-time">'+(e.dateKey||'')+' '+(e.time||'')+'</span>'+
+      '<span class="h-time">'+((e.dateKey||'').split('-').reverse().join('.'))+' '+(e.time||'')+'</span>'+
       '<span class="h-desc">'+(e.session||'')+' · '+(e.inst||e.instrument||'—')+' · '+(e.score||0)+'/10</span>'+
       '<span class="h-rr">RR '+e.rr+'</span>'+
       '<span class="history-delete" onclick="event.stopPropagation();deleteTrade(\''+e.id+'\')">✕</span>'+
@@ -674,7 +675,7 @@ function renderHistory(){
 
 /* ── CLEAR ── */
 async function deleteTrade(id){
- if(!confirm('Удалить сделку?')) return;
+ if(!window.confirm('Удалить сделку?')) return;
  await deleteFromGoogle(id);
  await loadHistoryFromGoogle();
 }
@@ -800,7 +801,7 @@ function openTradeDetails(id){
  const e=tradeHistory.find(x=>x.id===id);
  if(!e)return;
 
- document.getElementById('modal-date').textContent=(e.dateKey||'')+' '+(e.time||'');
+ document.getElementById('modal-date').textContent=((e.dateKey||'').split('-').reverse().join('.'))+' '+(e.time||'');
  document.getElementById('modal-summary').textContent='Подробности сделки';
 
  const checksHtml=LABELS.map((lbl,i)=>
