@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чеклист трейдера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Unbounded:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #141720;
+  --surface2: #1c2030;
+  --border: #252a3a;
+  --border2: #2e3550;
+  --text: #e8eaf2;
+  --muted: #c7cedf;
+  --dim: #3d4560;
+  --green: #00e5a0;
+  --green-bg: rgba(0,229,160,0.07);
+  --green-border: rgba(0,229,160,0.25);
+  --red: #ff4d6a;
+  --red-bg: rgba(255,77,106,0.07);
+  --red-border: rgba(255,77,106,0.25);
+  --amber: #f5a623;
+  --amber-bg: rgba(245,166,35,0.07);
+  --amber-border: rgba(245,166,35,0.25);
+  --blue: #4d8bff;
+  --blue-bg: rgba(77,139,255,0.08);
+  --blue-border: rgba(77,139,255,0.25);
+  --accent: #00e5a0;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:17px;min-height:100vh;line-height:1.6}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(77,139,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(77,139,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+
+/* HEADER */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px;gap:20px}
+.label-tag{display:inline-block;font-size:12px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid var(--green-border);background:var(--green-bg);padding:3px 10px;border-radius:20px;margin-bottom:10px}
+.header h1{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--text);line-height:1.2}
+.header h1 span{color:var(--accent)}
+.time-display{text-align:right;flex-shrink:0}
+.time-val{font-size:24px;font-weight:700;color:var(--text);letter-spacing:.04em}
+.date-val{font-size:13px;color:#d7ddec;margin-top:2px}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.stat-card{padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.stat-val{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:600;color:var(--text)}
+.stat-label{font-size:12px;color:#d7ddec;margin-top:3px;letter-spacing:.06em}
+
+/* PROGRESS */
+.progress-wrap{margin-bottom:28px;position:sticky;top:0;z-index:50;background:var(--bg);padding:12px 0}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-label{font-size:12px;color:#d7ddec;text-transform:uppercase;letter-spacing:.08em}
+.progress-count{font-size:13px;font-weight:700;color:var(--accent)}
+.progress-track{height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0%}
+
+/* SELECTORS */
+.selector-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.selector-label{font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#d7ddec;margin-bottom:6px}
+.seg-group{display:flex;gap:4px}
+.seg-btn{flex:1;padding:11px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:#d7ddec;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
+.seg-btn:hover{border-color:var(--dim);color:var(--text)}
+.seg-btn.active{background:var(--green-bg);border-color:var(--green-border);color:var(--accent)}
+.inst-group{display:flex;gap:4px;flex-wrap:wrap}
+.inst-btn{padding:11px 14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:#d7ddec;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.inst-btn:hover{border-color:var(--dim);color:var(--text)}
+.inst-btn.active{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+
+/* DXY */
+.dxy-warn{display:none;align-items:center;gap:8px;padding:11px 14px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius);margin-bottom:10px;font-size:13px;color:var(--amber)}
+
+/* SECTIONS */
+.section{margin-bottom:24px}
+.section-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.section-num{font-size:12px;font-weight:700;color:var(--accent);width:20px;flex-shrink:0}
+.section-title{font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+
+/* CHECK ITEMS — vertical card layout */
+.checks-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:0}
+.check-item{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;transition:all .15s;user-select:none;position:relative;overflow:hidden;min-height:100px}
+.check-item::before{content:'';position:absolute;left:0;top:0;right:0;height:2px;background:transparent;transition:background .15s}
+.check-item:hover{border-color:var(--border2)}
+.check-item.checked{background:var(--green-bg);border-color:var(--green-border)}
+.check-item.checked::before{background:var(--accent)}
+.chk-box{width:20px;height:20px;border:1.5px solid var(--dim);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.check-item.checked .chk-box{background:var(--accent);border-color:var(--accent)}
+.chk-icon{display:none;width:12px;height:12px}
+.check-item.checked .chk-icon{display:block}
+.chk-body{flex:1}
+.chk-text{font-size:14px;color:var(--text);font-weight:500;line-height:1.4}
+.chk-sub{font-size:12px;color:#d7ddec;margin-top:4px;line-height:1.5}
+.check-item.checked .chk-text{color:var(--accent)}
+.check-item.checked .chk-sub{color:rgba(0,229,160,0.65)}
+
+/* BLOCKER */
+.blocker{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border:1px solid var(--red-border);border-radius:var(--radius);background:var(--red-bg);margin-bottom:8px}
+.blocker-icon{color:var(--red);flex-shrink:0;margin-top:2px}
+.blocker-text{font-size:13px;color:var(--red);line-height:1.5}
+.blocker-text strong{font-weight:700}
+
+/* RR */
+.rr-row{display:flex;align-items:center;gap:10px;padding:13px 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);margin-bottom:8px}
+.rr-label{flex:1;font-size:14px;color:#d7ddec}
+.rr-input{width:80px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;text-align:center;outline:none;transition:border-color .15s}
+.rr-input:focus{border-color:var(--accent)}
+.rr-badge{font-size:12px;font-weight:700;letter-spacing:.06em;padding:4px 10px;border-radius:20px;min-width:56px;text-align:center}
+.rr-badge.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.rr-badge.bad{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.rr-badge.neutral{background:var(--surface2);color:#d7ddec;border:1px solid var(--border)}
+
+/* VERDICT */
+.verdict{margin-top:24px;padding:22px 24px;border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface);transition:all .3s}
+.verdict.go{background:var(--green-bg);border-color:var(--green-border)}
+.verdict.nogo{background:var(--red-bg);border-color:var(--red-border)}
+.verdict.warn{background:var(--amber-bg);border-color:var(--amber-border)}
+.verdict-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.verdict-dot{width:9px;height:9px;border-radius:50%;background:#b0b8d0;flex-shrink:0;animation:pulse 2s infinite}
+.verdict.go .verdict-dot{background:var(--green)}
+.verdict.nogo .verdict-dot{background:var(--red);animation:none}
+.verdict.warn .verdict-dot{background:var(--amber)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.verdict-title{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
+.verdict.go .verdict-title{color:var(--green)}
+.verdict.nogo .verdict-title{color:var(--red)}
+.verdict.warn .verdict-title{color:var(--amber)}
+.verdict-sub{font-size:13px;color:#d7ddec;line-height:1.5;padding-left:19px}
+.verdict.go .verdict-sub{color:rgba(0,229,160,0.8)}
+.verdict.nogo .verdict-sub{color:rgba(255,77,106,0.8)}
+.verdict.warn .verdict-sub{color:rgba(245,166,35,0.8)}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:8px;margin-top:12px}
+.btn-enter{flex:1;padding:16px 16px;border:1px solid var(--green-border);border-radius:var(--radius);background:var(--green);color:#0d0f14;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .15s;text-align:center}
+.btn-enter:hover{background:#00ffb3;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,229,160,0.3)}
+.btn-enter-warn{flex:1;padding:16px 16px;border:1px solid var(--amber-border);border-radius:var(--radius);background:var(--amber-bg);color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .15s;text-align:center}
+.btn-enter-warn:hover{background:rgba(245,166,35,0.15)}
+.btn-ghost{padding:12px 18px;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;color:#d7ddec;font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{color:var(--text);border-color:var(--dim)}
+.btn-ghost-full{width:100%;padding:12px;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;color:#d7ddec;font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:all .15s;margin-top:8px}
+.btn-ghost-full:hover{color:var(--text)}
+
+/* HISTORY */
+.history-section{margin-top:32px;border-top:1px solid var(--border);padding-top:24px}
+.history-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.history-title{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#d7ddec;font-weight:500}
+.history-clear{font-size:12px;color:var(--dim);cursor:pointer;background:none;border:none;font-family:'JetBrains Mono',monospace;transition:color .15s}
+.history-clear:hover{color:var(--red)}
+.history-list{display:flex;flex-direction:column;gap:5px}
+.history-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-size:13px}
+.h-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.h-dot.go{background:var(--green)}
+.h-dot.nogo{background:var(--red)}
+.h-dot.warn{background:var(--amber)}
+.h-time{color:#d7ddec;flex-shrink:0}
+.h-desc{color:#d7ddec;flex:1}
+.h-rr{color:var(--text);font-weight:700;flex-shrink:0}
+.history-empty{font-size:13px;color:var(--dim);text-align:center;padding:16px}
+
+/* ── CALENDAR ── */
+.calendar-section{margin-top:32px;border-top:1px solid var(--border);padding-top:24px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-title{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#d7ddec;font-weight:500}
+.cal-nav{display:flex;align-items:center;gap:8px}
+.cal-nav-btn{width:30px;height:30px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:#d7ddec;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
+.cal-nav-btn:hover{color:var(--text);border-color:var(--dim)}
+.cal-month{font-size:13px;font-weight:500;color:var(--text);min-width:120px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#d7ddec;text-align:center;padding:4px 0 8px}
+.cal-day{aspect-ratio:1;border-radius:6px;border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative;min-width:0}
+.cal-day:hover:not(.empty){border-color:var(--border2);background:var(--surface2)}
+.cal-day.empty{cursor:default}
+.cal-day .d-num{font-size:14px;font-weight:500;color:#d7ddec;line-height:1}
+.cal-day .d-dots{display:flex;gap:2px;margin-top:4px;flex-wrap:wrap;justify-content:center;max-width:28px}
+.cal-day .d-dot{width:4px;height:4px;border-radius:50%;background:var(--dim)}
+.cal-day.today .d-num{color:var(--accent)}
+.cal-day.today{border-color:var(--green-border)}
+.cal-day.c-green{background:rgba(0,229,160,0.1);border-color:rgba(0,229,160,0.2)}
+.cal-day.c-green .d-num{color:var(--green)}
+.cal-day.c-amber{background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.2)}
+.cal-day.c-amber .d-num{color:var(--amber)}
+.cal-day.c-red{background:rgba(255,77,106,0.1);border-color:rgba(255,77,106,0.2)}
+.cal-day.c-red .d-num{color:var(--red)}
+.cal-day.has-trades{cursor:pointer}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);width:100%;max-width:520px;max-height:80vh;overflow-y:auto;padding:26px;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:#d7ddec;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
+.modal-close:hover{color:var(--text);border-color:var(--dim)}
+.modal-date{font-family:'Unbounded',sans-serif;font-size:17px;font-weight:600;color:var(--text);margin-bottom:4px}
+.modal-summary{font-size:13px;color:#d7ddec;margin-bottom:20px}
+.modal-trade{border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;background:var(--bg)}
+.mt-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mt-dot.go{background:var(--green)}
+.mt-dot.nogo{background:var(--red)}
+.mt-dot.warn{background:var(--amber)}
+.mt-info{display:flex;gap:10px;flex-wrap:wrap}
+.mt-chip{font-size:11px;color:#d7ddec;padding:3px 9px;border:1px solid var(--border2);border-radius:20px}
+.mt-checks{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mt-chk{font-size:12px;display:flex;align-items:center;gap:4px;color:#d7ddec}
+.mt-chk.ok{color:var(--green)}
+.mt-chk.miss{color:var(--dim);text-decoration:line-through}
+
+.footer{text-align:center;margin-top:40px;font-size:11px;color:var(--dim);letter-spacing:.06em}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+
+<!--
+Для чтения истории с разных устройств localStorage недостаточен.
+Нужен внешний бэкенд (Firebase/Supabase/API).
+Текущая версия остаётся локальной.
+-->
+
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="label-tag">ТОРГОВЫЙ ЖУРНАЛ</div>
+      <h1>Чеклист<br><span>перед входом</span></h1>
+    </div>
+    <div class="time-display">
+      <div class="time-val" id="time">--:--</div>
+      <div class="date-val" id="date">--</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="stat-total">0</div><div class="stat-label">ВСЕГО СДЕЛОК</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-go" style="color:var(--green)">0</div><div class="stat-label">СИСТЕМНЫХ</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-nogo" style="color:var(--red)">0</div><div class="stat-label">НАРУШЕНИЙ</div></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span class="progress-label">Прогресс чеклиста</span>
+      <span class="progress-count" id="prog-count">0 / 10</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+  </div>
+
+  <!-- SESSION + INSTRUMENT -->
+  <div class="selector-row">
+    <div>
+      <div class="selector-label">Сессия</div>
+      <div class="seg-group">
+        <button class="seg-btn" id="s-london" onclick="setSession('london')">Лондон</button>
+        <button class="seg-btn" id="s-ny" onclick="setSession('ny')">Нью-Йорк</button>
+      </div>
+    </div>
+    <div>
+      <div class="selector-label">Инструмент</div>
+      <div class="inst-group">
+        <button class="inst-btn" onclick="setInst(this,'eur')">GER40</button>
+        <button class="inst-btn" onclick="setInst(this,'us')">NAS100</button>
+        <button class="inst-btn" onclick="setInst(this,'us')">US30</button>
+        <button class="inst-btn" onclick="setInst(this,'us')">SP500</button>
+      </div>
+    </div>
+  </div>
+  <div class="dxy-warn" id="dxy-warn">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5L12.5 11H1.5L7 1.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7 5.5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="9.5" r=".6" fill="currentColor"/></svg>
+    Американский индекс — проверь DXY перед входом.
+  </div>
+
+  <!-- SECTION 01 -->
+  <div class="section">
+    <div class="section-head"><span class="section-num">01</span><span class="section-title">Контекст и тренд</span></div>
+    <div class="checks-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="check-item" id="c0" onclick="toggle(0)">
+        <div class="chk-box" id="cb0"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Тренд на 15м чёткий и читаемый</div><div class="chk-sub">Если тренда нет — сделки нет. Боковик = пропуск.</div></div>
+      </div>
+      <div class="check-item" id="c1" onclick="toggle(1)">
+        <div class="chk-box" id="cb1"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Торгую по тренду, не против него</div><div class="chk-sub">Лонг только в восходящий, шорт только в нисходящий</div></div>
+      </div>
+      <div class="check-item" id="c2" onclick="toggle(2)">
+        <div class="chk-box" id="cb2"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text" id="c2-text">Открытие Лондона вышло за диапазон Азии</div><div class="chk-sub" id="c2-sub">Второй 15м бар подтверждает направление</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 02 -->
+  <div class="section">
+    <div class="section-head"><span class="section-num">02</span><span class="section-title">Сетап на 5м</span></div>
+    <div class="checks-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="check-item" id="c3" onclick="toggle(3)">
+        <div class="chk-box" id="cb3"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Вижу один из трёх сетапов</div><div class="chk-sub">① Импульс → откат → продолжение ② Проторговка → пробой ③ Уровень + разворот</div></div>
+      </div>
+      <div class="check-item" id="c4" onclick="toggle(4)">
+        <div class="chk-box" id="cb4"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Есть чёткая инициатива на 5м</div><div class="chk-sub">Длинные тела, нет сильных хвостов, нет сужения</div></div>
+      </div>
+      <div class="check-item" id="c5" onclick="toggle(5)">
+        <div class="chk-box" id="cb5"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Подтверждение от вспомогательного уровня</div><div class="chk-sub">Уровень 1H, FVG 1H, или зона после новостного импульса</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 03 -->
+  <div class="section">
+    <div class="section-head"><span class="section-num">03</span><span class="section-title">Параметры сделки</span></div>
+    <div class="checks-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:8px">
+      <div class="check-item" id="c6" onclick="toggle(6)">
+        <div class="chk-box" id="cb6"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Стоп выставлен ДО входа — за начало импульса</div><div class="chk-sub">Стоп на графике, не в голове. Иногда — за слом структуры 5м.</div></div>
+      </div>
+      <div class="check-item" id="c7" onclick="toggle(7)">
+        <div class="chk-box" id="cb7"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Тейк на чётком уровне или RR ≥ 1.5</div><div class="chk-sub">Если нет уровня — минимум 1:2. Закрываю по замедлению + сужение свечей.</div></div>
+      </div>
+    </div>
+    <div class="rr-row">
+<div class="rr-label">Реальный RR сделки</div>
+<button class="btn-ghost" onclick="changeRR(-0.1)">−</button>
+<div class="rr-input" id="rr-display">1.5</div>
+<button class="btn-ghost" onclick="changeRR(0.1)">+</button>
+<div class="rr-badge neutral" id="rr-badge">1.5 R</div>
+</div>
+  </div>
+
+  <!-- SECTION 04 -->
+  <div class="section">
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Защита от слабых мест</span></div>
+    <div class="blocker">
+      <svg class="blocker-icon" width="16" height="16" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 4L10 10M10 4L4 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="blocker-text">Предыдущая сделка убыточная? <strong>Пауза 15 минут. Не торгуй эмоцию.</strong></div>
+    </div>
+    <div class="checks-grid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="check-item" id="c8" onclick="toggle(8)">
+        <div class="chk-box" id="cb8"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Объём стандартный — лот не увеличен</div><div class="chk-sub">Завышение объёма = эмоциональное решение, не системное.</div></div>
+      </div>
+      <div class="check-item" id="c9" onclick="toggle(9)">
+        <div class="chk-box" id="cb9"><svg class="chk-icon" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#0d0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-body"><div class="chk-text">Стоп не буду двигать после входа</div><div class="chk-sub">БУ только при достижении 0.5R — автоматически, не раньше.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="verdict" id="verdict">
+    <div class="verdict-header">
+      <div class="verdict-dot" id="v-dot"></div>
+      <div class="verdict-title" id="v-title">Заполни чеклист</div>
+    </div>
+    <div class="verdict-sub" id="v-sub">Выбери сессию, инструмент и ответь честно на каждый пункт.</div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="btn-row" id="btn-enter-row" style="display:none">
+    <button class="btn-enter" id="btn-enter" onclick="enterTrade()">⚡ ВОЙТИ В СДЕЛКУ</button>
+    <button class="btn-ghost" onclick="resetAll()">↺</button>
+  </div>
+  <div class="btn-row" id="btn-enter-warn-row" style="display:none">
+    <button class="btn-enter-warn" id="btn-enter-warn" onclick="enterTradeWarn()">⚠ ВОЙТИ ВОПРЕКИ СИСТЕМЕ</button>
+    <button class="btn-ghost" onclick="resetAll()">↺</button>
+  </div>
+  <button class="btn-ghost-full" id="reset-row" onclick="resetAll()">↺ Начать заново</button>
+
+  <!-- HISTORY -->
+  <div class="history-section">
+    <div class="history-head">
+      <span class="history-title">Журнал сделок</span>
+      <button class="history-clear" onclick="clearHistory()">очистить</button>
+    </div>
+    <div class="history-list" id="history-list"><div class="history-empty">Пока нет записей</div></div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="calendar-section">
+    <div class="cal-header">
+      <span class="cal-title">Календарь дисциплины</span>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+        <span class="cal-month" id="cal-month"></span>
+        <button class="cal-nav-btn" onclick="calNext()">›</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <div class="footer">TRADING CHECKLIST · ТВОЯ СИСТЕМА · ТВОИ ПРАВИЛА</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalBtn()">×</button>
+    <div class="modal-date" id="modal-date"></div>
+    <div class="modal-summary" id="modal-summary"></div>
+    <div id="modal-trades"></div>
+  </div>
+</div>
+
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbzV2ctRQFiN1iq_0bPSSBi_rjhboyvlXy_MrYIYDmhhYj83qisdi5pvSRKYjZzV3bEuoA/exec';
+
+var LABELS = [
+  'Тренд 15м чёткий',
+  'Торгую по тренду',
+  'Открытие / 2й бар',
+  'Есть сетап',
+  'Инициатива 5м',
+  'Уровень 1H/FVG',
+  'Стоп выставлен',
+  'Тейк определён',
+  'Объём стандартный',
+  'Стоп не двину'
+];
+
+var checks = new Array(10).fill(false);
+var session = '';
+var instType = '';
+var instName = '';
+var rrVal = 1.5;
+var tradeHistory = [];
+
+async function loadHistoryFromGoogle(){
+ try{
+   const r = await fetch(API_URL);
+   tradeHistory = await r.json();
+   renderHistory(); renderCalendar(); updateStats();
+ }catch(e){console.error(e);}
+}
+
+async function saveToGoogle(entry){
+ return fetch(API_URL,{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify(entry)
+ });
+}
+
+async function deleteFromGoogle(id){
+ return fetch(API_URL,{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({action:'delete',id:id})
+ });
+}
+var calYear, calMonth;
+
+function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+/* ── CLOCK ── */
+function updateClock(){
+  var d = new Date();
+  document.getElementById('time').textContent = pad(d.getHours())+':'+pad(d.getMinutes());
+  var days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  var months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  document.getElementById('date').textContent = days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()];
+}
+updateClock(); setInterval(updateClock,1000);
+
+/* ── SESSION / INST ── */
+function setSession(s){
+  session=s;
+  document.getElementById('s-london').classList.toggle('active',s==='london');
+  document.getElementById('s-ny').classList.toggle('active',s==='ny');
+  var t=document.getElementById('c2-text'),sb=document.getElementById('c2-sub');
+  if(s==='london'){ t.textContent='Открытие Лондона вышло за диапазон Азии'; sb.textContent='Второй 15м бар Лондона подтверждает направление'; }
+  else { t.textContent='Второй 15м бар NY подтверждает направление'; sb.textContent='Первые 15–30 мин NY — основное окно входа'; }
+  update();
+}
+function setInst(el,type){
+  instType=type; instName=el.textContent.trim();
+  document.querySelectorAll('.inst-btn').forEach(function(b){b.classList.remove('active')});
+  el.classList.add('active');
+  document.getElementById('dxy-warn').style.display=type==='us'?'flex':'none';
+  update();
+}
+
+/* ── CHECKLIST ── */
+function toggle(i){
+  checks[i]=!checks[i];
+  document.getElementById('c'+i).classList.toggle('checked',checks[i]);
+  update();
+}
+function countChecked(){ return checks.filter(Boolean).length; }
+
+
+function changeRR(delta){
+  rrVal=Math.max(0,Math.round((rrVal+delta)*10)/10);
+  document.getElementById('rr-display').textContent=rrVal.toFixed(1);
+  checkRR();
+}
+
+function checkRR(){
+  
+  var badge=document.getElementById('rr-badge');
+  if(rrVal>=1.5){badge.textContent=rrVal.toFixed(1)+' R';badge.className='rr-badge ok';}
+  else if(rrVal>0){badge.textContent=rrVal.toFixed(1)+' R';badge.className='rr-badge bad';}
+  else{badge.textContent='— R';badge.className='rr-badge neutral';}
+  update();
+}
+
+/* ── UPDATE UI ── */
+function update(){
+  var n=countChecked();
+  document.getElementById('prog-fill').style.width=Math.round(n/10*100)+'%';
+  document.getElementById('prog-count').textContent=n+' / 10';
+
+  var vEl=document.getElementById('verdict');
+  var vT=document.getElementById('v-title');
+  var vS=document.getElementById('v-sub');
+  var enterRow=document.getElementById('btn-enter-row');
+  var warnRow=document.getElementById('btn-enter-warn-row');
+  var resetRow=document.getElementById('reset-row');
+
+  enterRow.style.display='none'; warnRow.style.display='none'; resetRow.style.display='block';
+  vEl.className='verdict';
+
+  if(!session){
+    vT.textContent='Выбери сессию'; vS.textContent='Лондон или Нью-Йорк — правила отличаются.'; return;
+  }
+  if(rrVal>0&&rrVal<1.5){
+    vEl.className='verdict nogo';
+    vT.textContent='НЕТ ВХОДА — RR слабый';
+    vS.textContent='RR '+rrVal.toFixed(1)+' ниже минимума 1.5. Найди лучшую точку или пропусти.';
+    warnRow.style.display='flex'; resetRow.style.display='none'; return;
+  }
+  if(!checks[0]){
+    vEl.className='verdict nogo';
+    vT.textContent='НЕТ ВХОДА — нет тренда';
+    vS.textContent='Без чёткого тренда на 15м торговля превращается в угадывание.';
+    warnRow.style.display='flex'; resetRow.style.display='none'; return;
+  }
+  var missed=10-n;
+  if(n>=9&&rrVal>=1.5){
+    vEl.className='verdict go';
+    vT.textContent='ВХОД РАЗРЕШЁН';
+    vS.textContent='Все условия выполнены. Стоп выставлен, объём нормальный — торгуй систему.';
+    enterRow.style.display='flex'; resetRow.style.display='none'; return;
+  }
+  if(missed<=3){
+    vEl.className='verdict warn';
+    vT.textContent='Можно войти — осторожно (−'+missed+')';
+    vS.textContent='Пропущено '+missed+' '+(missed===1?'пункт':'пункта')+'. Осознанный риск — это не то же самое, что эмоциональный.';
+    warnRow.style.display='flex'; enterRow.style.display='none'; resetRow.style.display='none'; return;
+  }
+  if(missed<=6){
+    vEl.className='verdict warn';
+    vT.textContent='Слабый сетап — подумай дважды (−'+missed+')';
+    vS.textContent='Пропущено '+missed+' пунктов. Можешь войти, но это уже не твоя система.';
+    warnRow.style.display='flex'; resetRow.style.display='none'; return;
+  }
+  vT.textContent='Продолжай — '+n+' из 10';
+  vS.textContent='Отвечай честно. Каждый пропущенный пункт — это деньги.';
+}
+
+/* ── SAVE TRADE ── */
+function buildEntry(quality){
+  var d=new Date();
+  return {
+    ts: d.getTime(),
+    dateKey: d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),
+    time: pad(d.getHours())+':'+pad(d.getMinutes()),
+    session: session==='london'?'Лондон':'NY',
+    inst: instName||'—',
+    rr: rrVal>0?rrVal.toFixed(1):'—',
+    score: countChecked(),
+    checks: checks.slice(),
+    quality: quality  /* 'go' | 'warn' | 'nogo' */
+  };
+}
+function enterTrade(){
+  save(buildEntry('go'));
+}
+function enterTradeWarn(){
+  save(buildEntry(countChecked()>=7?'warn':'nogo'));
+}
+async function save(entry){
+  entry.id = crypto.randomUUID();
+  await saveToGoogle(entry);
+  await loadHistoryFromGoogle();
+  resetAll();
+}
+
+/* ── RESET ── */
+function resetAll(){
+  checks=new Array(10).fill(false); session=''; instType=''; instName=''; rrVal=0;
+  for(var i=0;i<10;i++) document.getElementById('c'+i).classList.remove('checked');
+  document.getElementById('s-london').classList.remove('active');
+  document.getElementById('s-ny').classList.remove('active');
+  document.querySelectorAll('.inst-btn').forEach(function(b){b.classList.remove('active')});
+  document.getElementById('dxy-warn').style.display='none';
+  document.getElementById('rr-input').value='';
+  document.getElementById('rr-badge').textContent='— R';
+  document.getElementById('rr-badge').className='rr-badge neutral';
+  document.getElementById('btn-enter-row').style.display='none';
+  document.getElementById('btn-enter-warn-row').style.display='none';
+  document.getElementById('reset-row').style.display='block';
+  update();
+}
+
+/* ── STATS ── */
+function updateStats(){
+  var total=tradeHistory.length;
+  var go=tradeHistory.filter(function(e){return e.quality==='go'}).length;
+  var bad=tradeHistory.filter(function(e){return e.quality==='nogo'}).length;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-go').textContent=go;
+  document.getElementById('stat-nogo').textContent=bad;
+}
+
+/* ── HISTORY LIST ── */
+function renderHistory(){
+  var list=document.getElementById('history-list');
+  if(tradeHistory.length===0){list.innerHTML='<div class="history-empty">Пока нет записей</div>';return;}
+  list.innerHTML=tradeHistory.slice(0,20).map(function(e){
+    var cls=e.quality;
+    return '<div class="history-item" onclick="deleteTrade(\''+e.id+'\')">'+
+      '<div class="h-dot '+cls+'"></div>'+
+      '<span class="h-time">'+e.dateKey.slice(5).replace('-','.')+' '+e.time+'</span>'+
+      '<span class="h-desc">'+e.session+' · '+e.inst+' · '+e.score+'/10</span>'+
+      '<span class="h-rr">RR '+e.rr+'</span>'+
+      '</div>';
+  }).join('');
+}
+
+/* ── CLEAR ── */
+async function deleteTrade(id){
+ if(!confirm('Удалить сделку?')) return;
+ await deleteFromGoogle(id);
+ await loadHistoryFromGoogle();
+}
+function clearHistory(){
+ alert('Массовая очистка отключена для Google Sheets');
+}
+
+/* ── CALENDAR ── */
+function initCal(){
+  var now=new Date();
+  calYear=now.getFullYear(); calMonth=now.getMonth();
+}
+function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function getDayData(){
+  /* returns map dateKey -> { trades, minScore, maxScore } */
+  var map={};
+  tradeHistory.forEach(function(e){
+    if(!map[e.dateKey]) map[e.dateKey]={trades:[],minScore:10,maxScore:0};
+    map[e.dateKey].trades.push(e);
+    if(e.score<map[e.dateKey].minScore) map[e.dateKey].minScore=e.score;
+    if(e.score>map[e.dateKey].maxScore) map[e.dateKey].maxScore=e.score;
+  });
+  return map;
+}
+
+function dayColor(data){
+  /* colour based on WORST trade of the day */
+  var min=data.minScore;
+  if(min>=9) return 'c-green';
+  if(10-min<=3) return 'c-amber';  /* 7-8 checked */
+  return 'c-red';                   /* <=6 checked */
+}
+
+function renderCalendar(){
+  var map=getDayData();
+  var months=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  document.getElementById('cal-month').textContent=months[calMonth]+' '+calYear;
+
+  var firstDay=new Date(calYear,calMonth,1).getDay(); /* 0=Sun */
+  firstDay=(firstDay+6)%7; /* Mon=0 */
+  var daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  var today=new Date();
+  var todayKey=today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
+
+  var dows=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  var html=dows.map(function(d){return '<div class="cal-dow">'+d+'</div>';}).join('');
+
+  /* empty cells before day 1 */
+  for(var i=0;i<firstDay;i++) html+='<div class="cal-day empty"></div>';
+
+  for(var d=1;d<=daysInMonth;d++){
+    var key=calYear+'-'+pad(calMonth+1)+'-'+pad(d);
+    var data=map[key];
+    var cls='cal-day';
+    var dotsHtml='';
+    var onclick='';
+    if(key===todayKey) cls+=' today';
+    if(data){
+      cls+=' has-trades '+dayColor(data);
+      var dotCount=Math.min(data.trades.length,5);
+      for(var di=0;di<dotCount;di++) dotsHtml+='<div class="d-dot"></div>';
+      onclick=' onclick="openDay(\''+key+'\')"';
+    }
+    html+='<div class="'+cls+'"'+onclick+'>'+
+      '<div class="d-num">'+d+'</div>'+
+      (dotsHtml?'<div class="d-dots">'+dotsHtml+'</div>':'')+
+      '</div>';
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+
+/* ── MODAL ── */
+function openDay(dateKey){
+  var map=getDayData();
+  var data=map[dateKey];
+  if(!data) return;
+
+  var parts=dateKey.split('-');
+  var months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  var label=parseInt(parts[2])+' '+months[parseInt(parts[1])-1]+' '+parts[0];
+  document.getElementById('modal-date').textContent=label;
+
+  var n=data.trades.length;
+  var avgScore=Math.round(data.trades.reduce(function(a,e){return a+e.score},0)/n*10)/10;
+  var goCount=data.trades.filter(function(e){return e.quality==='go'}).length;
+  document.getElementById('modal-summary').textContent=
+    n+' '+(n===1?'сделка':n<5?'сделки':'сделок')+' · Средний балл '+avgScore+'/10 · Системных: '+goCount;
+
+  var tradesHtml=data.trades.map(function(e,idx){
+    var dot=e.quality;
+    var checksHtml=LABELS.map(function(lbl,i){
+      return '<div class="mt-chk '+(e.checks[i]?'ok':'miss')+'">'+
+        (e.checks[i]?'✓':'✗')+' '+lbl+'</div>';
+    }).join('');
+    return '<div class="modal-trade">'+
+      '<div class="mt-header">'+
+        '<div class="mt-dot '+dot+'"></div>'+
+        '<strong>#'+(idx+1)+'</strong>'+
+      '</div>'+
+      '<div class="mt-info">'+
+        '<span class="mt-chip">'+e.time+'</span>'+
+        '<span class="mt-chip">'+e.session+'</span>'+
+        '<span class="mt-chip">'+e.inst+'</span>'+
+        '<span class="mt-chip">RR '+e.rr+'</span>'+
+        '<span class="mt-chip">'+e.score+'/10</span>'+
+      '</div>'+
+      '<div class="mt-checks">'+checksHtml+'</div>'+
+      '</div>';
+  }).join('');
+  document.getElementById('modal-trades').innerHTML=tradesHtml;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){ if(e.target===document.getElementById('modal-overlay')) closeModalBtn(); }
+function closeModalBtn(){ document.getElementById('modal-overlay').classList.remove('open'); }
+
+/* ── INIT ── */
+initCal();
+loadHistoryFromGoogle();
+update();
+</script>
+</body>
+</html>
