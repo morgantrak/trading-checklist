@@ -437,10 +437,38 @@ var tradeHistory = [];
 
 async function loadHistoryFromGoogle(){
  try{
+
    const r = await fetch(API_URL);
+
    tradeHistory = await r.json();
-   renderHistory(); renderCalendar(); updateStats();
- }catch(e){console.error(e);}
+
+   tradeHistory = tradeHistory.map(e => ({
+
+     ...e,
+
+     dateKey: e.dateKey || e.date || '',
+
+     inst: e.inst || e.instrument || '—',
+
+     checks: Array.isArray(e.checks)
+       ? e.checks
+       : (() => {
+           try {
+             return JSON.parse(e.checks || '[]');
+           } catch {
+             return [];
+           }
+         })()
+
+   }));
+
+   renderHistory();
+   renderCalendar();
+   updateStats();
+
+ }catch(e){
+   console.error(e);
+ }
 }
 
 async function saveToGoogle(entry){
@@ -629,8 +657,8 @@ function renderHistory(){
     var cls=e.quality;
     return '<div class="history-item" onclick="deleteTrade(\''+e.id+'\')">'+
       '<div class="h-dot '+cls+'"></div>'+
-      '<span class="h-time">'+e.dateKey.slice(5).replace('-','.')+' '+e.time+'</span>'+
-      '<span class="h-desc">'+e.session+' · '+e.inst+' · '+e.score+'/10</span>'+
+      '<span class="h-time">'+(e.dateKey || '').slice(5).replace('-','.')+' '+(e.time || '')+'</span>'+
+      '<span class="h-desc">'+(e.session || '')+' · '+(e.inst || e.instrument || '—')+' · '+(e.score || 0)+'/10</span>'+
       '<span class="h-rr">RR '+e.rr+'</span>'+
       '</div>';
   }).join('');
@@ -658,10 +686,13 @@ function getDayData(){
   /* returns map dateKey -> { trades, minScore, maxScore } */
   var map={};
   tradeHistory.forEach(function(e){
-    if(!map[e.dateKey]) map[e.dateKey]={trades:[],minScore:10,maxScore:0};
-    map[e.dateKey].trades.push(e);
-    if(e.score<map[e.dateKey].minScore) map[e.dateKey].minScore=e.score;
-    if(e.score>map[e.dateKey].maxScore) map[e.dateKey].maxScore=e.score;
+    var key = e.dateKey || e.date;
+if(!key) return;
+
+if(!map[key]) map[key]={trades:[],minScore:10,maxScore:0};
+    map[key].trades.push(e);
+    if(e.score<map[key].minScore) map[key].minScore=e.score;
+    if(e.score>map[key].maxScore) map[key].maxScore=e.score;
   });
   return map;
 }
